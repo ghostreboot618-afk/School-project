@@ -1,0 +1,830 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Real-time Analisis Grafik Saham + Prediksi + Mode Demo</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #141e30, #243b55);
+      color: #fff;
+      min-height: 100vh;
+      padding: 30px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      user-select: none;
+    }
+
+    .container {
+      background: #1c283a;
+      border-radius: 14px;
+      box-shadow: 0 12px 50px rgba(0, 0, 0, 0.7);
+      width: 100%;
+      max-width: 960px;
+      padding: 30px 35px 40px;
+    }
+
+    h1 {
+      font-weight: 700;
+      font-size: 2.6rem;
+      margin-bottom: 25px;
+      letter-spacing: 1.2px;
+      text-align: center;
+      color: #60fff9;
+      text-shadow: 0 0 12px #3de8e7aa;
+      user-select: text;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 20px;
+      user-select: text;
+    }
+
+    .controls label {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: #b0efff;
+      align-self: center;
+    }
+
+    .controls input[type="text"],
+    .controls select {
+      border: none;
+      border-radius: 8px;
+      padding: 11px 16px;
+      font-size: 1.1rem;
+      min-width: 130px;
+      outline-offset: 3px;
+      outline-color: #48d7d1;
+      transition: outline-color 0.3s ease;
+      background: #35475e;
+      color: #fff;
+      font-weight: 600;
+      box-shadow: inset 0 0 7px #236274bb;
+    }
+
+    .controls input[type="text"]:focus,
+    .controls select:focus {
+      outline-color: #49fff9;
+      box-shadow: 0 0 10px #49fff9;
+      background: #2c3d56;
+    }
+
+    button {
+      background: #3de8e7;
+      color: #0b1822;
+      border: none;
+      cursor: pointer;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1.15rem;
+      padding: 12px 30px;
+      box-shadow: 0 4px 15px #36cfd8cc;
+      transition: background 0.3s ease;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    button:hover {
+      background: #30cec3;
+      box-shadow: 0 6px 25px #30cec3cc;
+    }
+
+    #current-time {
+      text-align: center;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #7aeaff;
+      letter-spacing: 0.4px;
+      user-select: text;
+      text-shadow: 0 0 8px #68dfffaa;
+    }
+
+    #demo-warning {
+      background-color: #ff4757aa;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      text-align: center;
+      margin-bottom: 20px;
+      user-select: text;
+      box-shadow: 0 0 20px #ff4757bb;
+      color: #fff;
+    }
+
+    #chart-wrapper {
+      position: relative;
+      width: 100%;
+      height: 480px;
+      background: #2e425a;
+      border-radius: 18px;
+      box-shadow: inset 0 0 25px #224571;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    canvas#chart {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: #3de8e7dd;
+      color: #0b1822;
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      white-space: nowrap;
+      user-select: none;
+      transform: translate(-50%, -150%);
+      box-shadow: 0 0 20px #3de8e7cc;
+      display: none;
+      transition: opacity 0.2s ease;
+      z-index: 10;
+      letter-spacing: 0.03em;
+    }
+
+    #prediction {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #80ffc3;
+      text-shadow: 0 0 15px #32b886cc;
+      min-height: 30px;
+      letter-spacing: 0.06em;
+      user-select: none;
+    }
+
+    .prediction-up {
+      color: #52ff94;
+      text-shadow: 0 0 18px #26d35c;
+    }
+    .prediction-down {
+      color: #ff6251;
+      text-shadow: 0 0 18px #d32619;
+    }
+    .prediction-stable {
+      color: #f7f7f7cc;
+      text-shadow: 0 0 10px #99999988;
+    }
+
+    #demo-controls {
+      margin-top: 20px;
+      background: #16324F;
+      padding: 15px 22px;
+      border-radius: 14px;
+      box-shadow: inset 0 0 15px #0e2439;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      user-select: text;
+    }
+
+    #demo-currency {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #adebad;
+      user-select: text;
+      min-width: 180px;
+      text-align: center;
+      text-shadow: 0 0 10px #5fba57cc;
+    }
+
+    #trade-actions label {
+      font-weight: 600;
+      color: #a0e1e0;
+      margin-right: 12px;
+      font-size: 1rem;
+      user-select: none;
+      cursor: pointer;
+    }
+
+    #trade-actions input[type="radio"] {
+      accent-color: #3de8e7;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+
+    #reset-balance-btn {
+      background-color: #ff6b6b;
+      border: none;
+      border-radius: 8px;
+      color: #121212;
+      font-weight: 700;
+      padding: 10px 20px;
+      cursor: pointer;
+      box-shadow: 0 0 15px #fa6a6aaa;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+
+    #reset-balance-btn:hover {
+      background-color: #de4747;
+      box-shadow: 0 0 25px #de4747cc;
+    }
+
+    /* Accessibility improvement */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" role="main" aria-label="Saham real-time grafik dan prediksi">
+    <h1>Analisis Grafik Saham Real-time dengan Prediksi Naik/Turun</h1>
+    <div id="current-time" aria-live="polite" aria-atomic="true"></div>
+
+    <div class="controls" role="form" aria-label="Kontrol input grafik saham">
+      <label for="stock-symbol">Kode Saham:</label>
+      <input type="text" id="stock-symbol" maxlength="5" aria-required="true" aria-describedby="symbol-desc" value="AAPL" autocomplete="off" />
+      <span id="symbol-desc" class="sr-only">Masukkan kode saham, misal AAPL, GOTO, TLKM</span>
+
+      <label for="days">Jumlah Hari:</label>
+      <select id="days" aria-required="true" aria-describedby="days-desc">
+        <option value="7">7 Hari</option>
+        <option value="14">14 Hari</option>
+        <option value="30" selected>30 Hari</option>
+        <option value="60">60 Hari</option>
+        <option value="90">90 Hari</option>
+      </select>
+      <span id="days-desc" class="sr-only">Memilih periode waktu grafik</span>
+
+      <label for="demo-mode" style="color:#b0efff;align-self:center; user-select: text;">
+        <input type="checkbox" id="demo-mode" /> Mode Demo (Belajar tanpa risiko)
+      </label>
+
+      <button id="refresh-btn" aria-label="Tampilkan grafik saham dan mulai animasi">Tampilkan Grafik + Animasi</button>
+    </div>
+
+    <div id="demo-warning" style="display:none;" role="alert" aria-live="assertive" aria-atomic="true">
+      <strong>Mode Demo Aktif:</strong> Ini adalah data simulasi untuk belajar investasi tanpa risiko kehilangan uang nyata.
+    </div>
+
+    <div id="chart-wrapper" aria-label="Grafik harga saham">
+      <canvas id="chart" role="img" aria-label="Grafik garis harga saham dan prediksi"></canvas>
+      <div class="tooltip" id="tooltip" role="tooltip"></div>
+    </div>
+
+    <div id="prediction" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- DEMO TRADE CONTROLS -->
+    <div id="demo-controls" style="display:none;" aria-label="Kontrol trade demo saham">
+      <div id="demo-currency" aria-live="polite" aria-atomic="true">
+        Uang Demo: Rp <span id="demo-balance">10,000,000</span>
+      </div>
+      <div id="trade-actions" role="radiogroup" aria-label="Pilihan beli atau jual saham">
+        <label><input type="radio" name="trade-action" value="buy" checked /> Beli</label>
+        <label><input type="radio" name="trade-action" value="sell" /> Jual</label>
+      </div>
+      <button id="reset-balance-btn" aria-label="Reset saldo uang demo">Reset Saldo</button>
+    </div>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById('chart');
+      const ctx = canvas.getContext('2d');
+      const symbolInput = document.getElementById('stock-symbol');
+      const daysSelect = document.getElementById('days');
+      const refreshBtn = document.getElementById('refresh-btn');
+      const demoCheckbox = document.getElementById('demo-mode');
+      const demoWarning = document.getElementById('demo-warning');
+      const currentTimeElem = document.getElementById('current-time');
+      const tooltip = document.getElementById('tooltip');
+      const predictionElem = document.getElementById('prediction');
+      const demoControls = document.getElementById('demo-controls');
+      const demoBalanceElem = document.getElementById('demo-balance');
+      const tradeActions = document.getElementsByName('trade-action');
+      const resetBalanceBtn = document.getElementById('reset-balance-btn');
+
+      const padding = 60;
+
+      let animationId = null;
+      let prices = [];
+      let dates = [];
+      let symbol = '';
+      let days = 30;
+      let realTimeIndex = 0;
+      let isDemoMode = false;
+
+      // Demo money initial balance
+      const INITIAL_DEMO_BALANCE = 10000000; // Rp 10 million
+
+      // User demo balance and shares held
+      let demoBalance = INITIAL_DEMO_BALANCE;
+      let demoShares = 0;
+
+      // Resize canvas to container size with device pixel ratio
+      function resizeCanvas() {
+        const parent = canvas.parentElement;
+        const rect = parent.getBoundingClientRect();
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = rect.height + 'px';
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // reset transform
+        ctx.scale(dpr, dpr);
+      }
+
+      // Generate demo random walk stock data realistically fluctuating
+      function generatePrices(days) {
+        let ps = [];
+        let base;
+        if (isDemoMode) {
+          base = 100 + Math.random() * 20; // demo starts lower for learning feel
+        } else {
+          base = 150 + Math.random() * 30;
+        }
+        for (let i = 0; i < days; i++) {
+          let changePercent = (Math.random() - 0.48) * 1.5;
+          base = base * (1 + changePercent / 100);
+          base = Math.min(Math.max(base, 5), 400);
+          ps.push(parseFloat(base.toFixed(2)));
+        }
+        return ps;
+      }
+
+      // Generate date label strings from today backwards, skipping weekends
+      function generateTradingDates(days) {
+        let ds = [];
+        let dt = new Date();
+        while (ds.length < days) {
+          if (dt.getDay() !== 0 && dt.getDay() !== 6) {
+            ds.unshift(dt.toISOString().slice(0, 10));
+          }
+          dt.setDate(dt.getDate() - 1);
+        }
+        return ds;
+      }
+
+      // Draw grid lines and axes with labels
+      function drawAxes(prices, dates) {
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        const maxPrice = Math.max(...prices);
+        const minPrice = Math.min(...prices);
+        const range = maxPrice - minPrice || 1;
+
+        ctx.lineCap = 'round';
+
+        ctx.fillStyle = '#ffffffcc';
+        ctx.font = '14px Poppins';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+
+        ctx.strokeStyle = '#515f7a';
+        ctx.lineWidth = 1;
+
+        for (let i = 0; i <= 6; i++) {
+          const yVal = minPrice + range * (i / 6);
+          const y = h - padding - (i / 6) * (h - 2 * padding);
+
+          ctx.beginPath();
+          ctx.moveTo(padding, y);
+          ctx.lineTo(w - padding + 10, y);
+          ctx.stroke();
+
+          ctx.fillText(yVal.toFixed(2), padding - 15, y);
+        }
+
+        ctx.textAlign = 'center';
+
+        const step = dates.length > 20 ? Math.ceil(dates.length / 8) : 1;
+
+        ctx.fillStyle = '#d0e9eecc';
+        for (let i = 0; i < dates.length; i += step) {
+          const x = padding + (i / (dates.length - 1)) * (w - 2 * padding);
+          ctx.beginPath();
+          ctx.moveTo(x, padding - 5);
+          ctx.lineTo(x, h - padding);
+          ctx.stroke();
+
+          ctx.save();
+          ctx.translate(x, h - padding + 18);
+          ctx.rotate(-Math.PI / 4);
+          ctx.fillText(dates[i], 0, 0);
+          ctx.restore();
+        }
+
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#60fff9cc';
+        ctx.beginPath();
+        ctx.moveTo(padding, padding);
+        ctx.lineTo(padding, h - padding);
+        ctx.lineTo(w - padding, h - padding);
+        ctx.stroke();
+      }
+
+      // Draw smooth line given points
+      function drawLine(points, color = '#60fff9', width = 3) {
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.beginPath();
+
+        function catmullRomSpline(points, t) {
+          let p0, p1, p2, p3;
+          p1 = points[t];
+          p2 = points[t + 1];
+          p0 = points[t - 1] || p1;
+          p3 = points[t + 2] || p2;
+
+          return {
+            cx: p1.x + (p2.x - p0.x) / 6,
+            cy: p1.y + (p2.y - p0.y) / 6,
+            bx: p2.x - (p3.x - p1.x) / 6,
+            by: p2.y - (p3.y - p1.y) / 6,
+            x2: p2.x,
+            y2: p2.y,
+          };
+        }
+
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 0; i < points.length - 1; i++) {
+          if (i < points.length - 2) {
+            const c = catmullRomSpline(points, i);
+            ctx.bezierCurveTo(c.cx, c.cy, c.bx, c.by, c.x2, c.y2);
+          } else {
+            ctx.lineTo(points[i + 1].x, points[i + 1].y);
+          }
+        }
+        ctx.stroke();
+
+        const last = points[points.length - 1];
+        ctx.beginPath();
+        const gradRadial = ctx.createRadialGradient(last.x, last.y, 6, last.x, last.y, 14);
+        gradRadial.addColorStop(0, color);
+        gradRadial.addColorStop(1, color + '00');
+        ctx.fillStyle = gradRadial;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 18;
+        ctx.arc(last.x, last.y, 14, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      // Draw chart title
+      function drawTitle(symbol) {
+        ctx.fillStyle = '#60fff9';
+        ctx.font = 'bold 28px Poppins';
+        ctx.textAlign = 'left';
+        ctx.fillText(`Grafik Saham: ${symbol}`, padding, 38);
+      }
+
+      // Update real-time clock
+      function updateClock() {
+        const now = new Date();
+        currentTimeElem.textContent = `Waktu saat ini: ${now.toLocaleTimeString('id-ID', { hour12: false })}`;
+      }
+
+      // Tooltip handling
+      function setupTooltip(visiblePoints, dataPrices, dataDates) {
+        const rect = canvas.getBoundingClientRect();
+
+        function findClosestPoint(x) {
+          let closestIndex = 0;
+          let minDist = Infinity;
+          for (let i = 0; i < visiblePoints.length; i++) {
+            const px = visiblePoints[i].x;
+            const dist = Math.abs(px - x);
+            if (dist < minDist) {
+              minDist = dist;
+              closestIndex = i;
+            }
+          }
+          return closestIndex;
+        }
+
+        function mouseMoveHandler(e) {
+          const x = e.clientX - rect.left;
+
+          if (x < padding || x > rect.width - padding) {
+            tooltip.style.display = 'none';
+            return;
+          }
+
+          const idx = findClosestPoint(x);
+          const maxPrice = Math.max(...dataPrices);
+          const minPrice = Math.min(...dataPrices);
+          const range = maxPrice - minPrice || 1;
+
+          const px = visiblePoints[idx].x;
+          const py = visiblePoints[idx].y;
+
+          tooltip.style.left = `${px + rect.left - window.scrollX}px`;
+          tooltip.style.top = `${py + rect.top - window.scrollY}px`;
+          tooltip.style.display = 'block';
+          tooltip.style.opacity = '1';
+
+          tooltip.textContent =
+            `${dataDates[idx]} - Rp${dataPrices[idx].toLocaleString('id-ID', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            })}` + (isDemoMode ? " (Demo)" : "");
+        }
+
+        function mouseLeaveHandler() {
+          tooltip.style.opacity = '0';
+          tooltip.style.display = 'none';
+        }
+
+        canvas.removeEventListener('mousemove', mouseMoveHandler);
+        canvas.removeEventListener('mouseleave', mouseLeaveHandler);
+
+        canvas.addEventListener('mousemove', mouseMoveHandler);
+        canvas.addEventListener('mouseleave', mouseLeaveHandler);
+      }
+
+      // Linear regression for prediction
+      function predictNextPrice(prices) {
+        const n = Math.min(prices.length, 7);
+        if (n < 3) return null;
+
+        const y = prices.slice(prices.length - n);
+        const x = [];
+        for (let i = 0; i < n; i++) x.push(i);
+
+        const sumX = x.reduce((a, b) => a + b, 0);
+        const sumY = y.reduce((a, b) => a + b, 0);
+        const sumXY = x.reduce((acc, cur, i) => acc + cur * y[i], 0);
+        const sumX2 = x.reduce((acc, cur) => acc + cur * cur, 0);
+
+        const m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        const b = (sumY - m * sumX) / n;
+
+        return m * n + b;
+      }
+
+      function drawBackground() {
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        const grad = ctx.createLinearGradient(0, padding, 0, h - padding);
+        grad.addColorStop(0, '#14253a');
+        grad.addColorStop(1, '#1f3654');
+        ctx.fillStyle = grad;
+        ctx.fillRect(padding, padding, w - 2 * padding, h - 2 * padding);
+      }
+
+      // Render chart up to realTimeIndex
+      function renderAnimatedChart() {
+        resizeCanvas();
+        ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+        if (realTimeIndex < 1) realTimeIndex = 1;
+        if (realTimeIndex > prices.length) realTimeIndex = prices.length;
+
+        const visiblePrices = prices.slice(0, realTimeIndex);
+        const visibleDates = dates.slice(0, realTimeIndex);
+
+        drawBackground();
+        drawAxes(visiblePrices, visibleDates);
+
+        const maxPrice = Math.max(...prices);
+        const minPrice = Math.min(...prices);
+        const range = maxPrice - minPrice || 1;
+
+        const points = visiblePrices.map((p, i) => ({
+          x: padding + (i / (days - 1)) * (canvas.clientWidth - 2 * padding),
+          y: canvas.clientHeight - padding - ((p - minPrice) / range) * (canvas.clientHeight - 2 * padding)
+        }));
+
+        drawLine(points, '#60fff9', 3);
+        drawTitle(symbol);
+
+        if (realTimeIndex === prices.length) {
+          const pred = predictNextPrice(prices);
+          if (pred !== null) {
+            const predX = padding + (days / (days - 1)) * (canvas.clientWidth - 2 * padding);
+            const predY = canvas.clientHeight - padding - ((pred - minPrice) / range) * (canvas.clientHeight - 2 * padding);
+
+            if (predY > padding && predY < canvas.clientHeight - padding) {
+              ctx.strokeStyle = '#ffd966';
+              ctx.lineWidth = 2;
+              ctx.setLineDash([8, 6]);
+              ctx.beginPath();
+              ctx.moveTo(points[points.length - 1].x, points[points.length - 1].y);
+              ctx.lineTo(predX, predY);
+              ctx.stroke();
+              ctx.setLineDash([]);
+
+              ctx.fillStyle = '#ffd966aa';
+              ctx.shadowColor = '#ffcf59';
+              ctx.shadowBlur = 14;
+              ctx.beginPath();
+              ctx.arc(predX, predY, 12, 0, 2 * Math.PI);
+              ctx.fill();
+              ctx.shadowBlur = 0;
+
+              ctx.fillStyle = '#fff2a9';
+              ctx.font = 'bold 15px Poppins';
+              ctx.textAlign = 'center';
+              ctx.fillText(
+                `Prediksi\nRp${pred.toFixed(2)}`,
+                predX,
+                predY - 20
+              );
+            }
+          }
+        }
+
+        setupTooltip(points, prices, dates);
+      }
+
+      // Animate chart drawing
+      function animate() {
+        renderAnimatedChart();
+        if (realTimeIndex < prices.length) {
+          realTimeIndex++;
+          animationId = requestAnimationFrame(animate);
+        } else {
+          animationId = null;
+          showPrediction();
+        }
+      }
+
+      // Show prediction text
+      function showPrediction() {
+        if (prices.length < 2) {
+          predictionElem.textContent = '';
+          predictionElem.className = '';
+          return;
+        }
+        const pred = predictNextPrice(prices);
+        if (pred === null) {
+          predictionElem.textContent = '';
+          predictionElem.className = '';
+          return;
+        }
+        const lastPrice = prices[prices.length - 1];
+        const diff = pred - lastPrice;
+        const diffPercent = diff / lastPrice;
+
+        if (diffPercent > 0.008) {
+          predictionElem.textContent = `Prediksi: Harga Saham NAIK ↑` + (isDemoMode ? " (Demo)" : "");
+          predictionElem.className = 'prediction-up';
+        } else if (diffPercent < -0.008) {
+          predictionElem.textContent = `Prediksi: Harga Saham TURUN ↓` + (isDemoMode ? " (Demo)" : "");
+          predictionElem.className = 'prediction-down';
+        } else {
+          predictionElem.textContent = `Prediksi: Harga Saham STABIL →` + (isDemoMode ? " (Demo)" : "");
+          predictionElem.className = 'prediction-stable';
+        }
+      }
+
+      // Validate stock symbol format
+      function validateSymbol(sym) {
+        return /^[A-Z]{1,5}$/.test(sym);
+      }
+
+      // Format number to Indonesian Rupiah style with thousands separator
+      function formatCurrency(num) {
+        return num.toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      }
+
+      // Update demo currency display
+      function updateDemoCurrency() {
+        demoBalanceElem.textContent = formatCurrency(demoBalance);
+      }
+
+      // Perform trade (buy/sell) in demo mode
+      function performTrade() {
+        if (!isDemoMode) return;
+
+        // Only perform trade when data is fully loaded
+        if (realTimeIndex < prices.length) {
+          alert("Tunggu sampai grafik selesai dimuat untuk melakukan transaksi.");
+          return;
+        }
+
+        const action = [...tradeActions].find(r => r.checked)?.value;
+        const currentPrice = prices[prices.length - 1];
+        if (!currentPrice) return;
+
+        const quantity = 1; // fixed 1 share per trade for simplicity
+
+        if (action === "buy") {
+          const cost = currentPrice * quantity;
+          if (demoBalance >= cost) {
+            demoBalance -= cost;
+            demoShares += quantity;
+            alert(`Berhasil beli ${quantity} saham @ Rp${formatCurrency(currentPrice)}.\nSaldo sekarang Rp${formatCurrency(demoBalance)}.\nSaham dimiliki: ${demoShares}`);
+          } else {
+            alert("Saldo tidak mencukupi untuk membeli saham.");
+          }
+        } else if (action === "sell") {
+          if (demoShares >= quantity) {
+            demoShares -= quantity;
+            const revenue = currentPrice * quantity;
+            demoBalance += revenue;
+            alert(`Berhasil jual ${quantity} saham @ Rp${formatCurrency(currentPrice)}.\nSaldo sekarang Rp${formatCurrency(demoBalance)}.\nSaham dimiliki: ${demoShares}`);
+          } else {
+            alert("Tidak ada saham yang dapat dijual.");
+          }
+        }
+        updateDemoCurrency();
+      }
+
+      // Reset demo balance and shares
+      function resetDemoBalance() {
+        if (!isDemoMode) return;
+        if (confirm("Reset saldo demo ke Rp10.000.000 dan hapus saham yang dimiliki?")) {
+          demoBalance = INITIAL_DEMO_BALANCE;
+          demoShares = 0;
+          updateDemoCurrency();
+        }
+      }
+
+      // Initialize chart and demo mode UI
+      function initChart() {
+        cancelAnimationFrame(animationId);
+        predictionElem.textContent = '';
+        predictionElem.className = '';
+        symbol = symbolInput.value.trim().toUpperCase();
+        if (!validateSymbol(symbol)) {
+          alert('Kode saham harus berupa huruf kapital, 1-5 karakter (misal: AAPL, TLKM)');
+          symbolInput.focus();
+          return;
+        }
+        days = parseInt(daysSelect.value);
+        isDemoMode = demoCheckbox.checked;
+
+        // Show demo UI only in demo mode
+        demoWarning.style.display = isDemoMode ? 'block' : 'none';
+        demoControls.style.display = isDemoMode ? 'flex' : 'none';
+
+        prices = generatePrices(days);
+        dates = generateTradingDates(days);
+        realTimeIndex = 1;
+
+        if (isDemoMode) {
+          demoBalance = INITIAL_DEMO_BALANCE;
+          demoShares = 0;
+          updateDemoCurrency();
+        }
+
+        animate();
+      }
+
+      // Live clock updater
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      initChart();
+
+      refreshBtn.addEventListener('click', initChart);
+      symbolInput.addEventListener('keyup', e => { if (e.key === 'Enter') refreshBtn.click(); });
+      daysSelect.addEventListener('change', initChart);
+      demoCheckbox.addEventListener('change', initChart);
+
+      resetBalanceBtn.addEventListener('click', resetDemoBalance);
+
+      // When user selects buy or sell, perform trade immediately
+      [...tradeActions].forEach(radio => {
+        radio.addEventListener('change', () => {
+          performTrade();
+        });
+      });
+
+      // Responsive redraw on resize
+      window.addEventListener('resize', () => {
+        if (!animationId) {
+          renderAnimatedChart();
+          showPrediction();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
